@@ -26,6 +26,12 @@
 <p>address</p>
 <input id="address">
 
+<p>number</p>
+<input id="number" style="display: none">
+<button id="number-valid">valider</button>
+
+
+
 
 <p>New array: <span id="demo"></span></p>
 
@@ -68,6 +74,15 @@
     var locationDataIsValide = false;
     var locationMap;
 
+    $('input').focusout(function () {
+       console.log('choisissez dans la liste');
+    });
+
+    $('input').focus(function () {
+        console.log('le revoila');
+        $(this).data("uiAutocomplete").search($(this).val());
+    });
+
     depAutocomplete();
 
     function depAutocomplete() {
@@ -102,9 +117,8 @@
                     dep = ui.item.dep;
                     cityAutocomplete()
                 }
-            });
+            })
         }
-
     }
 
     function cityAutocomplete() {
@@ -140,10 +154,81 @@
                     cityCode = ui.item.code;
                     $('#demo').text( ui.item.code );
                     $('#demo').text( ui.item.postCode );
+                    addressAutocomplete();
                 }
             });
         }
     }
+
+
+    function addressAutocomplete() {
+        $("#address").autocomplete({
+            source: function (request, response) {
+                $.ajax({
+                    url: "https://api-adresse.data.gouv.fr/search",
+                    data: {
+                        q: request.term,
+                        citycode : cityCode
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        response($.map(data.features, function (item) {
+                            return {
+                                label: item.properties.name,
+                                value: item.properties.name,
+                                type : item.properties.type,
+                                name : item.properties.label
+                            };
+                        }));
+                    },
+
+                });
+            },
+            select: function (event, ui) {
+                $('#demo').text(ui.item.name +' '+ ui.item.type);
+
+                if (ui.item.type != 'housenumber'){
+                    $('#number').css('display','block');
+
+                    $('#number-valid').click(function () {
+                            adressVerif($('#number').val(),ui.item.label)
+                    })
+
+                }
+            }
+        });
+
+        function adressVerif(number,name) {
+            console.log(number + ' ' + name);
+
+            $.ajax({
+                url: "https://api-adresse.data.gouv.fr/search",
+                data: {
+                    q: number + ' ' + name,
+                    cityCode: cityCode,
+                    type : 'housenumber',
+                    limit :1
+                },
+                dataType: "json",
+                success: function (data) {
+
+                    if(data.features){
+                        data = data.features[0].properties;
+                        if(data.type === 'housenumber'){
+                            $('#demo').text(data.label + ' ' + data.type);
+                            console.log(data)
+                            return;
+                        }
+                    }
+
+                    $('#demo').text("aucune adresse connue pour ce numéro");
+
+                }
+
+            });
+        }
+    }
+
 
 
 
