@@ -17,15 +17,14 @@
 <input id="location-output">
 <div id="location-form" class="row"></div>
 
-<p>base</p>
-<input id="base">
+<p>dep</p>
+<input id="dep">
 
-<p>accent</p>
-<input id="accent">
+<p>city</p>
+<input id="city">
 
-
-<p>item</p>
-<input id="item">
+<p>address</p>
+<input id="address">
 
 
 <p>New array: <span id="demo"></span></p>
@@ -52,30 +51,36 @@
         "ô": "o",
         "û": "u",
         "ï": "i",
-        "ç": "c"
+        "ç": "c",
     };
-    var normalize = function( term ) {
+    var normalize = function (term) {
         var ret = "";
-        for ( var i = 0; i < term.length; i++ ) {
-            ret += accentMap[ term.charAt(i) ] || term.charAt(i);
+        for (var i = 0; i < term.length; i++) {
+            ret += accentMap[term.charAt(i)] || term.charAt(i);
         }
         return ret;
     };
+
+    var depCode;
+    var dep;
+    var cityCode;
+    var locationData;
+    var locationDataIsValide = false;
+    var locationMap;
 
     depAutocomplete();
 
     function depAutocomplete() {
         var features = [];
-
         $.ajax({
             url: "https://geo.api.gouv.fr/departements?fields=nom,code",
             dataType: "json",
             success: function (data) {
                 data.map(function (item) {
                     features.push({
-                        value : item.code + ' ' + item.nom,
-                        label : item.code + ' ' + item.nom,
-                        dep : item.code,
+                        value: item.code + ' ' + item.nom,
+                        label: item.code + ' ' + item.nom,
+                        dep: item.code,
                     });
                 });
 
@@ -84,23 +89,61 @@
         });
 
         function autocomplete(features) {
-            $( "#base" ).autocomplete({
-                source: function( request, response ) {
-                    var matcher = new RegExp( $.ui.autocomplete.escapeRegex( request.term ), "i" );
-                    response( $.grep( features, function( value ) {
+            $("#dep").autocomplete({
+                source: function (request, response) {
+                    var matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
+                    response($.grep(features, function (value) {
                         value = value.label || value.value || value;
-                        return matcher.test( value ) || matcher.test( normalize( value ) );
-                    }) );
+                        return matcher.test(value) || matcher.test(normalize(value));
+                    }));
                 },
-                minLength : 2,
-                select : function(event, ui){
-                    $('#demo').text( ui.item.dep );
+                minLength: 2,
+                select: function (event, ui) {
+                    dep = ui.item.dep;
+                    cityAutocomplete()
                 }
             });
         }
 
     }
 
+    function cityAutocomplete() {
+
+        var features = [];
+        $.ajax({
+            url: "https://geo.api.gouv.fr/departements/"+ dep +"/communes?fields=nom,code,codesPostaux&format=json&geometry=centre",
+            dataType: "json",
+            success: function (data) {
+                data.map(function (item) {
+                    features.push({
+                        value: item.nom,
+                        label: item.nom,
+                        code: item.code,
+                        postCode : item.codesPostaux[0]
+                    });
+                });
+                autocomplete(features);
+            }
+        });
+
+        function autocomplete(features) {
+            $("#city").autocomplete({
+                source: function (request, response) {
+                    var matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
+                    response($.grep(features, function (value) {
+                        value = value.label || value.value || value;
+                        return matcher.test(value) || matcher.test(normalize(value));
+                    }));
+                },
+                minLength: 3,
+                select: function (event, ui) {
+                    cityCode = ui.item.code;
+                    $('#demo').text( ui.item.code );
+                    $('#demo').text( ui.item.postCode );
+                }
+            });
+        }
+    }
 
 
 
