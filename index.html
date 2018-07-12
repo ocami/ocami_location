@@ -17,7 +17,18 @@
 <input id="location-output">
 <div id="location-form" class="row"></div>
 
+<p>base</p>
+<input id="base">
 
+<p>accent</p>
+<input id="accent">
+
+
+<p>item</p>
+<input id="item">
+
+
+<p>New array: <span id="demo"></span></p>
 
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -27,11 +38,94 @@
         integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw=="
         crossorigin=""></script>
 <script src="oc_location.js"></script>
-
 <script>
-    $('#location-form').locationForm({
-        output: $('#location-output')
+
+    //data 1
+    var truc = [];
+    function features() {
+        $.ajax({
+            url: "https://geo.api.gouv.fr/departements?fields=nom,code",
+            dataType: "json",
+            success: function (data) {
+
+                data.map(function (item) {
+                    truc.push(item.code + ' ' + item.nom);
+                });
+            }
+        });
+    }
+    features();
+
+    //data 2
+    var truc2 = [];
+    function features2() {
+        $.ajax({
+            url: "https://geo.api.gouv.fr/departements?fields=nom,code",
+            dataType: "json",
+            success: function (data) {
+
+                data.map(function (item) {
+                    truc2.push({
+                        value : item.code + ' ' + item.nom,
+                        label : item.code + ' ' + item.nom,
+                        dep : item.code,
+                    });
+                });
+            }
+        });
+    }
+    features2();
+
+    //base
+    $( "#base" ).autocomplete({
+        source: truc
     });
+
+
+    //accent
+    $( function() {
+        var accentMap = {
+            "á": "a",
+            "ö": "o",
+            "ô": "o"
+        };
+        var normalize = function( term ) {
+            var ret = "";
+            for ( var i = 0; i < term.length; i++ ) {
+                ret += accentMap[ term.charAt(i) ] || term.charAt(i);
+            }
+            return ret;
+        };
+
+        $( "#accent" ).autocomplete({
+            source: function( request, response ) {
+                var matcher = new RegExp( $.ui.autocomplete.escapeRegex( request.term ), "i" );
+                response( $.grep( truc, function( value ) {
+                    value = value.label || value.value || value;
+                    return matcher.test( value ) || matcher.test( normalize( value ) );
+                }) );
+            },
+            minLength : 2
+        });
+    } );
+
+    //item
+    var liste = [
+        { value : 'Draggable', label : 'Draggable', desc : 'L\'interaction Draggable permet de déplacer un élément.' },
+        { value : 'trucVal', label : 'trucLav', desc : 'le truc' },
+        { value : 'Resizable', label : 'Resizable', desc : 'L\'interaction Resizable permet de redimensionner un élément.' }
+    ];
+
+    $('#item').autocomplete({
+        source : truc2,
+
+        select : function(event, ui){ // lors de la sélection d'une proposition
+            $('#demo').text( ui.item.dep ); // on ajoute la description de l'objet dans un bloc
+        }
+    });
+
+
+
 </script>
 
 
