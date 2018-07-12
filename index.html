@@ -81,13 +81,21 @@
         source: truc
     });
 
-
     //accent
     $( function() {
         var accentMap = {
             "á": "a",
-            "ö": "o",
-            "ô": "o"
+            "â": "a",
+            "é": "e",
+            "è": "e",
+            "ë": "e",
+            "ê": "e",
+            "ù": "u",
+            "î": "i",
+            "ô": "o",
+            "û": "u",
+            "ï": "i",
+            "ç": "c"
         };
         var normalize = function( term ) {
             var ret = "";
@@ -100,12 +108,15 @@
         $( "#accent" ).autocomplete({
             source: function( request, response ) {
                 var matcher = new RegExp( $.ui.autocomplete.escapeRegex( request.term ), "i" );
-                response( $.grep( truc, function( value ) {
+                response( $.grep( truc2, function( value ) {
                     value = value.label || value.value || value;
                     return matcher.test( value ) || matcher.test( normalize( value ) );
                 }) );
             },
-            minLength : 2
+            minLength : 2,
+            select : function(event, ui){ // lors de la sélection d'une proposition
+                $('#demo').text( ui.item.dep ); // on ajoute la description de l'objet dans un bloc
+            }
         });
     } );
 
