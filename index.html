@@ -40,100 +40,69 @@
 <script src="oc_location.js"></script>
 <script>
 
-    //data 1
-    var truc = [];
-    function features() {
+    var accentMap = {
+        "á": "a",
+        "â": "a",
+        "é": "e",
+        "è": "e",
+        "ë": "e",
+        "ê": "e",
+        "ù": "u",
+        "î": "i",
+        "ô": "o",
+        "û": "u",
+        "ï": "i",
+        "ç": "c"
+    };
+    var normalize = function( term ) {
+        var ret = "";
+        for ( var i = 0; i < term.length; i++ ) {
+            ret += accentMap[ term.charAt(i) ] || term.charAt(i);
+        }
+        return ret;
+    };
+
+    depAutocomplete();
+
+    function depAutocomplete() {
+        var features = [];
+
         $.ajax({
             url: "https://geo.api.gouv.fr/departements?fields=nom,code",
             dataType: "json",
             success: function (data) {
-
                 data.map(function (item) {
-                    truc.push(item.code + ' ' + item.nom);
-                });
-            }
-        });
-    }
-    features();
-
-    //data 2
-    var truc2 = [];
-    function features2() {
-        $.ajax({
-            url: "https://geo.api.gouv.fr/departements?fields=nom,code",
-            dataType: "json",
-            success: function (data) {
-
-                data.map(function (item) {
-                    truc2.push({
+                    features.push({
                         value : item.code + ' ' + item.nom,
                         label : item.code + ' ' + item.nom,
                         dep : item.code,
                     });
                 });
+
+                autocomplete(features);
             }
         });
-    }
-    features2();
 
-    //base
-    $( "#base" ).autocomplete({
-        source: truc
-    });
-
-    //accent
-    $( function() {
-        var accentMap = {
-            "á": "a",
-            "â": "a",
-            "é": "e",
-            "è": "e",
-            "ë": "e",
-            "ê": "e",
-            "ù": "u",
-            "î": "i",
-            "ô": "o",
-            "û": "u",
-            "ï": "i",
-            "ç": "c"
-        };
-        var normalize = function( term ) {
-            var ret = "";
-            for ( var i = 0; i < term.length; i++ ) {
-                ret += accentMap[ term.charAt(i) ] || term.charAt(i);
-            }
-            return ret;
-        };
-
-        $( "#accent" ).autocomplete({
-            source: function( request, response ) {
-                var matcher = new RegExp( $.ui.autocomplete.escapeRegex( request.term ), "i" );
-                response( $.grep( truc2, function( value ) {
-                    value = value.label || value.value || value;
-                    return matcher.test( value ) || matcher.test( normalize( value ) );
-                }) );
-            },
-            minLength : 2,
-            select : function(event, ui){ // lors de la sélection d'une proposition
-                $('#demo').text( ui.item.dep ); // on ajoute la description de l'objet dans un bloc
-            }
-        });
-    } );
-
-    //item
-    var liste = [
-        { value : 'Draggable', label : 'Draggable', desc : 'L\'interaction Draggable permet de déplacer un élément.' },
-        { value : 'trucVal', label : 'trucLav', desc : 'le truc' },
-        { value : 'Resizable', label : 'Resizable', desc : 'L\'interaction Resizable permet de redimensionner un élément.' }
-    ];
-
-    $('#item').autocomplete({
-        source : truc2,
-
-        select : function(event, ui){ // lors de la sélection d'une proposition
-            $('#demo').text( ui.item.dep ); // on ajoute la description de l'objet dans un bloc
+        function autocomplete(features) {
+            $( "#base" ).autocomplete({
+                source: function( request, response ) {
+                    var matcher = new RegExp( $.ui.autocomplete.escapeRegex( request.term ), "i" );
+                    response( $.grep( features, function( value ) {
+                        value = value.label || value.value || value;
+                        return matcher.test( value ) || matcher.test( normalize( value ) );
+                    }) );
+                },
+                minLength : 2,
+                select : function(event, ui){
+                    $('#demo').text( ui.item.dep );
+                }
+            });
         }
-    });
+
+    }
+
+
+
 
 
 
