@@ -38,6 +38,7 @@
     var locationData;
     var locationDataIsValide = false;
     var $locationMap;
+    var $alertFocus = false;
 
     var accentMap = {
         "á": "a",
@@ -68,6 +69,7 @@
                 var $label = $("<label>Département</label>");
                 var $input = $("<input class='form-control' placeholder='Ex : 06 Alpes-Maritimes'>");
                 $form.empty().append([$label, $input]);
+                $alertFocus = true;
                 depAutocomplete($input);
                 break;
 
@@ -76,6 +78,7 @@
                 var $input = $("<input class='form-control' placeholder='Ex : nice'>");
                 $form.empty().append([$label, $input]);
                 cityAutocomplete($input);
+                $alertFocus = true;
                 break;
 
             case 'address' :
@@ -83,6 +86,7 @@
                 var $input = $("<input class='form-control' placeholder='Ex : 5 Promenade des Anglais'>");
                 $form.empty().append([$label, $input]);
                 addressAutocomplete($input);
+                $alertFocus = false;
                 break;
 
             case 'number' :
@@ -114,6 +118,7 @@
                     $container.append([$label, $input, $btRemove]),
                     $container2.append($btValid)
                 ]);
+                $alertFocus = false;
                 break;
 
             case 'yep' :
@@ -131,6 +136,16 @@
 
         if ($input)
             $input.focus()
+
+        if ($alertFocus){
+            $input.focusout(function () {
+                $alert.empty().text("Veuilez sélectionner dans la liste").show();
+            });
+            $input.focus(function () {
+                $alert.hide();
+                $(this).data("uiAutocomplete").search($(this).val());
+            });
+        }
 
     }
 
