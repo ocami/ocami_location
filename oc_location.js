@@ -5,7 +5,7 @@
     var $alert = $("<div class='alert alert-warning' role='alert' style='display: none'></div>");
     var $loader = $("<div class='loader-div'></div>");
     var $form = $("<div class='form-group'>");
-    var $show = $("<div class='col-xs-5'></div>");
+    var $show = $("<div class='col-xs-5 show'></div>");
 
     $.fn.locationForm = function (options) {
 
@@ -16,7 +16,7 @@
 
 
         $container.append([$alert, $loader, $form, $show]);
-        this.append([$container, $show]);
+        this.append([$container, $show]).addClass('ocm-location');
 
         /*if ($output.val().length !== 0) {
             locationUpdate($.parseJSON($output.val()));
@@ -37,7 +37,7 @@
     var address;
     var locationData;
     var locationDataIsValide = false;
-    var locationMap;
+    var $locationMap;
 
     var accentMap = {
         "á": "a",
@@ -87,17 +87,32 @@
 
             case 'number' :
                 var $label = $("<label>Numéro</label>");
-                var $input = $("<input class='form-control' placeholder='Ex : 5 bis'>");
-                var $container = $("<div class='col-xs-6'></div>");
-                var $remove = $("<button>Pas de numéro</button>").click(function () {
-                    nextStep('yep');
+                var $input = $("<input class='form-control' placeholder='Ex : 5 bis'>")
+                    .on('keydown', function (e) {
+                        $alert.hide();
+                        if (e.keyCode === 13) {
+                            $btValid.trigger('click');
+                        }
+                    });
+                var $container = $("<div>", {class: "col-xs-6"});
+                var $container2 = $("<div>", {class: "col-xs-6"});
+                var $btRemove = $("<button>", {
+                    class: "btn btn-success btn-xs remove col-xs-12",
+                    value: step
+                }).append('Pas de numéro').click(function () {
+                    confirm();
+                    $alert.hide();
                 });
-                var $valid = $("<button>Valider</button>").click(function () {
-                    checkNumber($input.val())
+                var $btValid = $("<button>", {
+                    class: "btn btn-info btn-valid",
+                    value: step
+                }).append('Valider').click(function () {
+                    checkNumber($input.val());
                 });
+
                 $form.empty().append([
-                    $container.append([$label, $input]),
-                    $container.append([$remove, $valid])
+                    $container.append([$label, $input, $btRemove]),
+                    $container2.append($btValid)
                 ]);
                 break;
 
@@ -135,8 +150,8 @@
             case  'address' :
                 $('#show_address').remove();
                 locationData = '';
-                if (typeof locationMap !== 'undefined')
-                    locationMap.remove();
+                if (typeof $locationMap !== 'undefined')
+                    $locationMap.remove();
         }
         nextStep(step);
         $output.trigger('change');
@@ -265,16 +280,20 @@
             dataType: "json",
             success: function (data) {
 
+                console.log('my data  citycode :' + cityCode + ' address : ' + address);
+
+
                 if (data.features) {
-                    data = data.features[0];
-                    if (data.properties.type === 'housenumber') {
-                        address = data.properties.name;
-                        setLocationData(data);
+                    p = data.features[0].properties;
+                    console.log('return data  citycode :' + p.citycode + ' address : ' + p.street);
+                    if (p.type === 'housenumber' && p.citycode === cityCode && p.street === address) {
+                        address = p.name;
+                        setLocationData(data.features[0]);
                         nextStep('yep');
                         return;
                     }
                 }
-                $alert.text("Aucune adresse connue pour ce numéro").show();
+                $alert.empty().text("Aucune adresse connue pour ce numéro").show();
             }
         });
     }
@@ -302,9 +321,9 @@
 
     //Confirm**********************************************************
     function locationConfirm() {
-        locationMap = $("<div>", {id: "location-map"});
-        $form.after(locationMap);
-        openLocationMap(locationData.x, locationData.y, 'location-map');
+        $locationMap = $("<div>", {id: "ocm-location-map"});
+        $form.after($locationMap);
+        openLocationMap(locationData.x, locationData.y, 'ocm-location-map');
 
         $output.val(JSON.stringify(locationData));
         $output.trigger('change');
@@ -326,10 +345,7 @@
             value: step
         }).append('modifier');
 
-        div.append(txt);
-        div.append(btn);
-
-        $show.append(div);
+        $show.append(div.append([txt, btn]));
     }
 
     function setLocationData(locationFeatures) {
@@ -359,8 +375,8 @@
         addShowElement(data.city, 'city');
         addShowElement(data.street, 'address');
 
-        locationMap = $("<div>", {id: "location-map"});
-        $form.after(locationMap);
+        $locationMap = $("<div>", {id: "location-map"});
+        $form.after($locationMap);
         openLocationMap(data.x, data.y, 'location-map');
 
 

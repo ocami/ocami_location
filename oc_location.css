@@ -12,8 +12,6 @@
 }
 
 
-
-
 /*autocomplete */
 .ui-autocomplete {
     position: absolute;
@@ -66,7 +64,20 @@
 }
 
 /*map */
-#location-map {
+#ocm-location-map {
     height: 180px;
     margin-bottom: 1em;
+}
+
+/*other*/
+.ocm-location .btn-valid{
+    margin-top: 1.8em;
+}
+
+.ocm-location .alert{
+    margin-bottom: 0em;
+}
+
+.ocm-location .show{
+    margin-top: 2em;
 }
