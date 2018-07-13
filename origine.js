@@ -60,8 +60,9 @@
                 break;
 
             case 'depValidate' :
-                loaderDivStart($locationForm);
-                depValidate();
+                $locationInput.val('');
+                console.log('hjéjéjéjéjé');
+                $locationAlert.text('salut').show();
                 break;
 
             case 'city' :

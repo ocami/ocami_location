@@ -15,7 +15,24 @@
 <body>
 
 <input id="location-output">
-<div id="location-form" class="row"></div>
+
+
+<div id="ocm-location" class="row">
+    <div class="col-xs-offset-1 col-xs-6">
+        <div id="alert" class="alert alert-warning" role="alert" style="display: none"></div>
+        <div class="loader-div"></div>
+        <div id="form" class="form-group"><label id="label">Département</label><input
+                id="input" class="form-control ui-autocomplete-input" placeholder="Ex : 06 Alpes-Maritimes"
+                autocomplete="off"></div>
+    </div>
+    <div id="show" class="col-xs-5"></div>
+</div>
+
+<br>
+<br>
+<br>
+<br>
+<br>
 
 <p>dep</p>
 <input id="dep">
@@ -31,8 +48,6 @@
 <button id="number-valid">valider</button>
 
 
-
-
 <p>New array: <span id="demo"></span></p>
 
 
@@ -44,6 +59,7 @@
         crossorigin=""></script>
 <script src="oc_location.js"></script>
 <script>
+
 
     var accentMap = {
         "á": "a",
@@ -67,6 +83,7 @@
         return ret;
     };
 
+
     var depCode;
     var dep;
     var cityCode;
@@ -75,7 +92,7 @@
     var locationMap;
 
     $('input').focusout(function () {
-       console.log('choisissez dans la liste');
+        console.log('choisissez dans la liste');
     });
 
     $('input').focus(function () {
@@ -125,7 +142,7 @@
 
         var features = [];
         $.ajax({
-            url: "https://geo.api.gouv.fr/departements/"+ dep +"/communes?fields=nom,code,codesPostaux&format=json&geometry=centre",
+            url: "https://geo.api.gouv.fr/departements/" + dep + "/communes?fields=nom,code,codesPostaux&format=json&geometry=centre",
             dataType: "json",
             success: function (data) {
                 data.map(function (item) {
@@ -133,7 +150,7 @@
                         value: item.nom,
                         label: item.nom,
                         code: item.code,
-                        postCode : item.codesPostaux[0]
+                        postCode: item.codesPostaux[0]
                     });
                 });
                 autocomplete(features);
@@ -152,8 +169,8 @@
                 minLength: 3,
                 select: function (event, ui) {
                     cityCode = ui.item.code;
-                    $('#demo').text( ui.item.code );
-                    $('#demo').text( ui.item.postCode );
+                    $('#demo').text(ui.item.code);
+                    $('#demo').text(ui.item.postCode);
                     addressAutocomplete();
                 }
             });
@@ -168,7 +185,7 @@
                     url: "https://api-adresse.data.gouv.fr/search",
                     data: {
                         q: request.term,
-                        citycode : cityCode
+                        citycode: cityCode
                     },
                     dataType: "json",
                     success: function (data) {
@@ -176,8 +193,8 @@
                             return {
                                 label: item.properties.name,
                                 value: item.properties.name,
-                                type : item.properties.type,
-                                name : item.properties.label
+                                type: item.properties.type,
+                                name: item.properties.label
                             };
                         }));
                     },
@@ -185,20 +202,20 @@
                 });
             },
             select: function (event, ui) {
-                $('#demo').text(ui.item.name +' '+ ui.item.type);
+                $('#demo').text(ui.item.name + ' ' + ui.item.type);
 
-                if (ui.item.type != 'housenumber'){
-                    $('#number').css('display','block');
+                if (ui.item.type != 'housenumber') {
+                    $('#number').css('display', 'block');
 
                     $('#number-valid').click(function () {
-                            adressVerif($('#number').val(),ui.item.label)
+                        adressVerif($('#number').val(), ui.item.label)
                     })
 
                 }
             }
         });
 
-        function adressVerif(number,name) {
+        function adressVerif(number, name) {
             console.log(number + ' ' + name);
 
             $.ajax({
@@ -206,15 +223,15 @@
                 data: {
                     q: number + ' ' + name,
                     cityCode: cityCode,
-                    type : 'housenumber',
-                    limit :1
+                    type: 'housenumber',
+                    limit: 1
                 },
                 dataType: "json",
                 success: function (data) {
 
-                    if(data.features){
+                    if (data.features) {
                         data = data.features[0].properties;
-                        if(data.type === 'housenumber'){
+                        if (data.type === 'housenumber') {
                             $('#demo').text(data.label + ' ' + data.type);
                             console.log(data)
                             return;
@@ -228,12 +245,6 @@
             });
         }
     }
-
-
-
-
-
-
 </script>
 
 
