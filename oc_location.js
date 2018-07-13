@@ -104,7 +104,7 @@
                     class: "btn btn-success btn-xs remove col-xs-12",
                     value: step
                 }).append('Pas de numéro').click(function () {
-                    confirm();
+                    addressConfirm();
                     $alert.hide();
                 });
                 var $btValid = $("<button>", {
@@ -121,17 +121,13 @@
                 $alertFocus = false;
                 break;
 
-            case 'yep' :
+            case 'validate' :
                 $form.hide();
                 addShowElement(address, 'address');
                 locationConfirm();
-                console.log('yyeeeeeeeeeeeeeeeeeeeeeeppppppp!!!');
                 break;
 
-            case 'confirm' :
-                $form.hide();
-                locationConfirm();
-                break;
+
         }
 
         if ($input)
@@ -251,7 +247,6 @@
 
     //Address**********************************************************
     function addressAutocomplete($input) {
-        console.log('yep');
         $input.autocomplete({
             source: function (request, response) {
                 $.ajax({
@@ -276,7 +271,7 @@
             select: function (event, ui) {
                 address = ui.item.value;
                 if (ui.item.type === 'housenumber')
-                    confirm();
+                    addressConfirm();
                 else
                     nextStep('number');
             }
@@ -304,7 +299,7 @@
                     if (p.type === 'housenumber' && p.citycode === cityCode && p.street === address) {
                         address = p.name;
                         setLocationData(data.features[0]);
-                        nextStep('yep');
+                        nextStep('validate');
                         return;
                     }
                 }
@@ -313,7 +308,7 @@
         });
     }
 
-    function confirm() {
+    function addressConfirm() {
         $.ajax({
             url: "https://api-adresse.data.gouv.fr/search",
             data: {
@@ -326,7 +321,7 @@
 
                 if (data.features) {
                     setLocationData(data.features[0]);
-                    nextStep('yep');
+                    nextStep('validate');
                     return;
                 }
                 $alert.text("Aucune adresse connue pour ce numéro").show();
