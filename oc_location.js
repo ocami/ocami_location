@@ -122,8 +122,6 @@
     function returnStep(step) {
 
         $form.show();
-        $locationBtnNextStep.show();
-        locationDataIsValide = false;
 
         switch (step) {
             case 'dep' :
@@ -256,7 +254,6 @@
     }
 
     function checkNumber(number) {
-
         $.ajax({
             url: "https://api-adresse.data.gouv.fr/search",
             data: {
@@ -269,23 +266,20 @@
             success: function (data) {
 
                 if (data.features) {
-                    data = data.features[0].properties;
-                    if (data.type === 'housenumber') {
-                        address = data.name;
-                        setLocationData(data.features[0]);
+                    data = data.features[0];
+                    if (data.properties.type === 'housenumber') {
+                        address = data.properties.name;
+                        setLocationData(data);
                         nextStep('yep');
                         return;
                     }
                 }
-
                 $alert.text("Aucune adresse connue pour ce numéro").show();
             }
-
         });
     }
 
     function confirm() {
-
         $.ajax({
             url: "https://api-adresse.data.gouv.fr/search",
             data: {
@@ -301,63 +295,10 @@
                     nextStep('yep');
                     return;
                 }
-
                 $alert.text("Aucune adresse connue pour ce numéro").show();
             }
-
         });
     }
-
-    /*function addressAutocomplete(cityCode) {
-        $input.autocomplete({
-            source: function (request, response) {
-                $.ajax({
-                    url: "https://api-adresse.data.gouv.fr/search/?citycode=" + cityCode,
-                    data: {q: request.term},
-                    dataType: "json",
-                    success: function (data) {
-                        response($.map(data.features, function (item) {
-                            var truc = {label: item.properties.name, value: item.properties.name};
-                            return truc;
-                        }));
-                        autocompleteAddressList = data.features;
-                    }
-                });
-            },
-            messages: {
-                noResults: '',
-                results: function () {
-                }
-            },
-            focus: function (event, ui) {
-                $(".ui-helper-hidden-accessible").hide();
-            }
-        });
-    }
-
-    function addressValidate() {
-        $.ajax({
-            url: "https://api-adresse.data.gouv.fr/search/?citycode=" + cityCode,
-            data: {q: $input.val()},
-            dataType: "json",
-            success: function (data) {
-                if (data.features.length > 0 && data.features[0].properties.name == $input.val()) {
-                    var locationFeatures = data.features[0];
-                    addShowElement(locationFeatures.properties.name, 'address');
-                    setLocationData(locationFeatures);
-                    $alert.hide();
-                    nextStep('confirm');
-                } else {
-                    $alert.text('Veuillez sélectionner une adresse dans la liste');
-                    $alert.show();
-                    nextStep('address');
-                }
-            },
-            error: function () {
-                ajaxError();
-            }
-        });
-    }*/
 
     //Confirm**********************************************************
     function locationConfirm() {
@@ -373,7 +314,6 @@
     $show.on('click', 'button', function (evt) {
         returnStep($(this).val());
     });
-
 
     //Other************************************************************
 
@@ -441,20 +381,3 @@
     }
 
 }(jQuery));
-
-function loaderDivStart(divToLoad) {
-
-    var $loaderDiv = $("#loader-div");
-
-    $loaderDiv.height(divToLoad.height());
-    $loaderDiv.width(divToLoad.width());
-    divToLoad.hide();
-
-    $loaderDiv.show();
-}
-
-function loaderDivStop(divToLoad) {
-    var $loaderDiv = $("#loader-div");
-    $loaderDiv.hide();
-    divToLoad.show();
-}
