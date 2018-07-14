@@ -39,6 +39,7 @@
     var locationDataIsValide = false;
     var $locationMap;
     var $alertFocus = false;
+    var markerLocation;
 
     var accentMap = {
         "á": "a",
@@ -64,6 +65,7 @@
 
     //Step**************************************************************
     function nextStep(step) {
+        $alert.hide();
         switch (step) {
             case 'dep' :
                 var $label = $("<label>Département</label>");
@@ -126,14 +128,12 @@
                 addShowElement(address, 'address');
                 locationConfirm();
                 break;
-
-
         }
 
         if ($input)
-            $input.focus()
+            $input.focus();
 
-        if ($alertFocus){
+        if ($alertFocus) {
             $input.focusout(function () {
                 $alert.empty().text("Veuilez sélectionner dans la liste").show();
             });
@@ -199,7 +199,7 @@
                 minLength: 2,
                 select: function (event, ui) {
                     addShowElement(ui.item.value, 'dep');
-                    dep = ui.item.dep;
+                    depCode = ui.item.dep;
                     nextStep('city');
                 }
             })
@@ -210,7 +210,7 @@
     function cityAutocomplete($input) {
         var features = [];
         $.ajax({
-            url: "https://geo.api.gouv.fr/departements/" + dep + "/communes?fields=nom,code,codesPostaux&format=json&geometry=centre",
+            url: "https://geo.api.gouv.fr/departements/" + depCode + "/communes?fields=nom,code,codesPostaux&format=json&geometry=centre",
             dataType: "json",
             success: function (data) {
                 data.map(function (item) {
@@ -280,20 +280,20 @@
 
     function checkNumber(number) {
         $.ajax({
-            url: "https://api-adresse.data.gouv.fr/search",
+            url: "https://api-adresse.data.gouv.fr/search/",
             data: {
                 q: number + ' ' + address,
-                cityCode: cityCode,
-                type: 'housenumber',
-                limit: 1
+                citycode: cityCode,
+                limit: 1,
+                type: 'housenumber'
+
+
             },
             dataType: "json",
             success: function (data) {
-
                 console.log('my data  citycode :' + cityCode + ' address : ' + address);
-
-
                 if (data.features) {
+                    console.log(data);
                     p = data.features[0].properties;
                     console.log('return data  citycode :' + p.citycode + ' address : ' + p.street);
                     if (p.type === 'housenumber' && p.citycode === cityCode && p.street === address) {
@@ -313,7 +313,7 @@
             url: "https://api-adresse.data.gouv.fr/search",
             data: {
                 q: address,
-                cityCode: cityCode,
+                citycode: cityCode,
                 limit: 1
             },
             dataType: "json",
@@ -339,13 +339,44 @@
         $output.trigger('change');
     }
 
+    //change coordinates***********************************************
+    function coordinatesChange(x, y) {
+        $alert.hide();
+        $.ajax({
+            url: "https://api-adresse.data.gouv.fr/reverse/",
+            data: {
+                lon: y,
+                lat: x,
+                limit: 1
+            },
+            dataType: "json",
+            success: function (data) {
+                console.log(data);
+                if (data.features.length > 0) {
+                    setLocationData(data.features[0]);
+                    locationData.x = x;
+                    locationData.y = y;
+                    $output.val(JSON.stringify(locationData));
+                    $output.trigger('change');
+                    $('#show_dep').find('p').text(locationData.dep);
+                    $('#show_city').find('p').text(locationData.city);
+                    $('#show_address').find('p').text(locationData.street);
+                    dep = locationData.dep;
+                    cityCode = locationData.cityCode;
+                    address = locationData.street
+                } else {
+                    $alert.empty().text("Pas d'adresse connue pour ce lieu").show();
+                }
+            }
+        });
+    }
+
     //Events************************************************************
     $show.on('click', 'button', function (evt) {
         returnStep($(this).val());
     });
 
     //Other************************************************************
-
     function addShowElement(text, step) {
 
         var div = $("<div>", {id: "show_" + step, class: "form_show row "});
@@ -358,18 +389,19 @@
         $show.append(div.append([txt, btn]));
     }
 
-    function setLocationData(locationFeatures) {
-        var f = locationFeatures;
+    function setLocationData(f) {
+        var depSplit = f.properties.context.split(/[\, ]+/);
+
         locationData = {
-            id: f.properties.id,
-            street: f.properties.name,
-            depCode: depCode,
-            dep: dep,
-            postCode: f.properties.postcode,
-            cityCode: cityCode,
-            city: f.properties.city,
             x: f.geometry.coordinates[1],
-            y: f.geometry.coordinates[0]
+            y: f.geometry.coordinates[0],
+            street: f.properties.name,
+            city: f.properties.city,
+            postCode: f.properties.postcode,
+            dep: depSplit[0] + ' ' + depSplit[1],
+            depCode: depSplit[0],
+            cityCode: cityCode,
+            id: f.properties.id
         }
     }
 
@@ -398,12 +430,19 @@
         var map = L.map(mapId, {
             center: [x, y],
             zoom: 18,
+            doubleClickZoom: false
         });
-        L.marker([x, y]).addTo(map);
+        markerLocation = L.marker([x, y]).addTo(map);
         L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
             maxZoom: 18
         }).addTo(map);
+
+        map.on('dblclick', function (e) {
+            map.removeLayer(markerLocation);
+            markerLocation = new L.marker(e.latlng).addTo(map);
+            coordinatesChange(e.latlng.lat, e.latlng.lng);
+        });
     }
 
 }(jQuery));
