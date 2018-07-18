@@ -386,8 +386,9 @@
 
         $show.append(div.append([txt, btn]));
 
-        if(step === 'address'){
-            var span = $("<div>", {class: "map-info col-xs-12"}).append("Double clic sur la carte pour modidfier la localisation");
+        if (step === 'address') {
+            var span = $("<div>", {class: "map-info col-xs-12 text-success well text-center"})
+                .append("Double clic sur la carte pour modidfier la localisation");
             div.append(span);
         }
     }
