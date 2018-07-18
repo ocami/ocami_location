@@ -107,7 +107,6 @@
                     value: step
                 }).append('Pas de numéro').click(function () {
                     addressConfirm();
-                    $alert.hide();
                 });
                 var $btValid = $("<button>", {
                     class: "btn btn-info btn-valid",
@@ -135,14 +134,13 @@
 
         if ($alertFocus) {
             $input.focusout(function () {
-                $alert.empty().text("Veuilez sélectionner dans la liste").show();
+                $alert.empty().text("Veuilez sélectionner un élément dans la liste").show();
             });
             $input.focus(function () {
                 $alert.hide();
                 $(this).data("uiAutocomplete").search($(this).val());
             });
         }
-
     }
 
     function returnStep(step) {
@@ -387,6 +385,11 @@
         }).append('modifier');
 
         $show.append(div.append([txt, btn]));
+
+        if(step === 'address'){
+            var span = $("<div>", {class: "map-info col-xs-12"}).append("Double clic sur la carte pour modidfier la localisation");
+            div.append(span);
+        }
     }
 
     function setLocationData(f) {
